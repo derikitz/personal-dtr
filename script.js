@@ -2,6 +2,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const clockInBtn = document.getElementById('clockInBtn');
   const clockOutBtn = document.getElementById('clockOutBtn');
   const exportBtn = document.getElementById('exportBtn');
+  const saveBtn = document.getElementById('saveDetails');
   const recordTableBody = document.getElementById('recordTableBody');
   const totalHoursElement = document.getElementById('totalHours');
   const clock = document.getElementById('clock');
@@ -180,55 +181,83 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
   function exportToPDF() {
-      const userName = document.getElementById('userName').value.toUpperCase();
-      const role = document.getElementById('role').value;
-      const emailAddress = document.getElementById('email').value;
-      const dateRange = document.getElementById('dateRange').value;
+    var userInformation = JSON.parse(localStorage.getItem('dtrDetails'));
+    var userName,role,emailAddress,dateRange,invoiceDate,clientName,clientEmail,clientRole,accountNumber,month,invoiceNum;
 
-      const invoiceDate = document.getElementById('invoiceDate').value;
-      const clientName = document.getElementById('clientName').value;
-      const clientEmail = document.getElementById('clientEmail').value;
-      const clientRole = document.getElementById('clientRole').value;
+      if ( userInformation != null && typeof userInformation == 'object' ) {
+        userName = document.getElementById('userName').value.toUpperCase();
+        role = document.getElementById('role').value;
+        emailAddress = document.getElementById('email').value;
+        dateRange = document.getElementById('dateRange').value;
+  
+        invoiceDate = document.getElementById('invoiceDate').value;
+        clientName = document.getElementById('clientName').value;
+        clientEmail = document.getElementById('clientEmail').value;
+        clientRole = document.getElementById('clientRole').value;
+  
+        accountNumber = document.getElementById('accountNumber').value;
+        month = document.getElementById('monthToInvoice').value.toUpperCase();
+        invoiceNum = document.getElementById('invoiceNum').value;
 
-      const accountNumber = document.getElementById('accountNumber').value;
-      const month = document.getElementById('monthToInvoice').value.toUpperCase();
-      const invoiceNum = document.getElementById('invoiceNum').value;
+        userInformation = {
+            'user': {
+                'name': userName,
+                'role': role,
+                'email': emailAddress,
+                'accountNumber': accountNumber,
+            },
+            'client': {
+                'name': clientName,
+                'email': clientEmail,
+                'role': clientRole
+            },
+            'other': {
+                'account_no': accountNumber,
+                'month': month,
+                'invoice_no': invoiceNum,
+                'invoice_date': invoiceDate,
+                'date_range': dateRange,
+            }
+          }
+      }
+
+      saveDetails(userInformation);
 
       const content = `
           <div>              
               <table id="export-heading">
                 <tr>
                     <td rowspan="3" style="font-weight:bold;text-align:right;padding-right:20px;">From:</td>
-                    <td colspan="2" style="text-transform:uppercase;">  ${userName}</td>
-                    <td colspan="2" style="padding-left:60px;">Invoice Date: ${invoiceDate}</td>
+                    <td colspan="2" style="text-transform:uppercase;">  ${userInformation.user.name}</td>
+                    <td colspan="2" style="padding-left:60px;">Invoice Date: ${userInformation.other.invoice_date}</td>
                 </tr>
                 <tr>
-                    <td colspan="2">  ${role}</td>
-                    <td colspan="2" style="padding-left:60px;">Invoice Number: ${invoiceNum}</td>
+                    <td colspan="2">  ${userInformation.user.role}</td>
+                    <td colspan="2" style="padding-left:60px;">Invoice Number: ${userInformation.other.invoice_no}</td>
                 </tr>
                 <tr>
-                    <td colspan="2">  ${emailAddress}</td>
+                    <td colspan="2">  ${userInformation.user.email}</td>
                 </tr>
                 <tr>
                     <td colspan="5"> </td>
                 </tr>
                 <tr>
                     <td rowspan="3" style="font-weight:bold;text-align:right;padding-right:20px;">To:</td>
-                    <td colspan="2">  ${clientName}</td>
-                    <td colspan="2" style="padding-left:60px;">MONTH: ${month}</td>
+                    <td colspan="2">  ${userInformation.client.name}</td>
+                    <td colspan="2" style="padding-left:60px;">MONTH: ${userInformation.other.month}</td>
                 </tr>
                 <tr>
-                    <td colspan="2">  ${clientRole}</td>
+                    <td colspan="2">  ${userInformation.client.role}</td>
                     <td colspan="2" style="padding-left:60px;">BPI Bank account number:</td>
                 </tr>
                 <tr>
-                    <td colspan="2">  ${clientEmail}</td>
-                    <td colspan="2" style="padding-left:60px;">${accountNumber}</td>
+                    <td colspan="2">  ${userInformation.client.email}</td>
+                    <td colspan="2" style="padding-left:60px;">${userInformation.other.account_no}</td>
                 </tr>
               </table>
               <hr>
               <h2 style="text-align:center;text-transform:uppercase;line-height:1;margin: 0 0 0 0;">Timesheet / Invoice</h2>
-              <h4 style="text-align:center;color:blue;line-height:1;margin: 0 0 0 0;">Pay Period: ${dateRange}</h4>
+              <h4 style="text-align:center;color:blue;line-height:1;margin: 0 0 0 0;">Pay Period: ${userInformation.other.date_range}</h4>
               ${createPrintableTable().outerHTML}
           </div>
       `;
@@ -242,6 +271,72 @@ document.addEventListener('DOMContentLoaded', () => {
       };
 
       html2pdf().from(content).set(opt).save();
+  }
+
+  function saveDetails( json_data ) {
+    var userInformation;
+
+    if ( typeof json_data == 'object' && json_data != null) {
+        localStorage.setItem('dtrDetails', JSON.stringify(json_data));
+    } else {
+        const userName = document.getElementById('userName').value.toUpperCase();
+        const role = document.getElementById('role').value;
+        const emailAddress = document.getElementById('email').value;
+        const dateRange = document.getElementById('dateRange').value;
+
+        const invoiceDate = document.getElementById('invoiceDate').value;
+        const clientName = document.getElementById('clientName').value;
+        const clientEmail = document.getElementById('clientEmail').value;
+        const clientRole = document.getElementById('clientRole').value;
+
+        const accountNumber = document.getElementById('accountNumber').value;
+        const month = document.getElementById('monthToInvoice').value.toUpperCase();
+        const invoiceNum = document.getElementById('invoiceNum').value;
+
+        userInformation = {
+            'user': {
+                'name': userName,
+                'role': role,
+                'email': emailAddress,
+                'accountNumber': accountNumber,
+            },
+            'client': {
+                'name': clientName,
+                'email': clientEmail,
+                'role': clientRole
+            },
+            'other': {
+                'account_no': accountNumber,
+                'month': month,
+                'invoice_no': invoiceNum,
+                'invoice_date': invoiceDate,
+                'date_range': dateRange,
+            }
+        }
+        localStorage.setItem('dtrDetails', JSON.stringify(userInformation));
+    }
+    
+
+    
+  }
+
+  function formInit() {
+    const userInformation = JSON.parse(localStorage.getItem('dtrDetails'));
+    if (userInformation != null && typeof userInformation == 'object' ) {
+        document.getElementById('userName').value = userInformation.user.name;
+        document.getElementById('role').value = userInformation.user.role;
+        document.getElementById('email').value = userInformation.user.email;
+        document.getElementById('dateRange').value = userInformation.other.date_range;
+
+        document.getElementById('invoiceDate').value = userInformation.other.invoice_date;
+        document.getElementById('clientName').value = userInformation.client.name;
+        document.getElementById('clientEmail').value = userInformation.client.email;
+        document.getElementById('clientRole').value = userInformation.client.role;
+
+        document.getElementById('accountNumber').value = userInformation.other.account_no;
+        document.getElementById('monthToInvoice').value = userInformation.other.month;
+        document.getElementById('invoiceNum').value = userInformation.other.invoice_no;
+    } 
   }
 
   clockInBtn.addEventListener('click', () => {
@@ -258,6 +353,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
   exportBtn.addEventListener('click', exportToPDF);
 
+  saveBtn.addEventListener('click', () => {
+    saveDetails(null)
+  });
+
+  formInit();
   renderRecords();
   updateClock();
   setInterval(updateClock, 1000);
