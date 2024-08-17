@@ -13,14 +13,98 @@ document.addEventListener('DOMContentLoaded', () => {
     const secondHand = document.querySelector('#clock .second');
     const timePeriod = document.querySelector('#clock .period');
 
-    let records = JSON.parse(localStorage.getItem('timeRecords')) || [];
-    let isClockedIn = JSON.parse(localStorage.getItem('isClockedIn')) || false;
-    let currentRecord = JSON.parse(localStorage.getItem('currentRecord')) || null;
+
+    let db;
+    let isClockedIn = false;
+    let currentRecord = null;
 
     const modal = document.querySelector('.modal');
     const closeBtn = document.querySelector('.modal-header button.close-modal');
 
-    function renderRecords() {
+    const request = indexedDB.open('DTRDatabase', 1);
+
+    request.onupgradeneeded = (e) => {
+        db = e.target.result;
+        db.createObjectStore('timeRecords', { keyPath: 'id', autoIncrement: true });
+        db.createObjectStore('settings', { keypath: 'key' });
+    }
+
+    request.onsuccess = (e) => {
+        db = e.target.result;
+        loadSettings();
+        renderRecords();
+        formInit();
+    }
+
+    request.onerror = (e) => {
+        console.log('IndexedDB error:',e.target.error);
+    }
+
+    function saveRecord(record) {
+        const transaction = db.transaction(['timeRecords'], 'readwrite');
+        const store = transaction.objectStore('timeRecords');
+        store.put(record);
+    }
+
+    function deleteRecord(id) {
+        const transaction = db.transaction(['timeRecords'], 'readwrite');
+        const store = transaction.objectStore('timeRecords');
+        store.delete(id);
+    }
+
+    function getAllRecords() {
+        return new Promise((resolve, reject) => {
+            if ( 'undefined' !== typeof(db) ) {
+                const transaction = db.transaction(['timeRecords'], 'readonly');
+                const store = transaction.objectStore('timeRecords');
+                const request = store.getAll();
+
+                request.onsuccess = function(event) {
+                    resolve(event.target.result);
+                };
+
+                request.onerror = function(event) {
+                    console.error(event.target.errorCode);
+                    reject(event.target.errorCode);
+                };
+            }
+        });
+    }
+
+    function saveSetting(key, value) {
+        const transaction = db.transaction(['settings'], 'readwrite');
+        const store = transaction.objectStore('settings');
+        store.put({ key, value });
+    }
+
+    function getSetting(key) {
+        return new Promise((resolve, reject) => {
+            if ( 'undefined' !== typeof(db) ) {
+                // console.log(key)
+                const transaction = db.transaction(['settings'], 'readonly');
+                const store = transaction.objectStore('settings');
+                const request = store.get(key);
+
+                request.onsuccess = function(event) {
+                    resolve(event.target.result ? event.target.result.value : null);
+                };
+
+                request.onerror = function(event) {
+                    reject(event.target.errorCode);
+                };
+            }
+        });
+    }
+
+    async function loadSettings() {
+        isClockedIn = await getSetting('isClockedIn') || false;
+        currentRecord = await getSetting('currentRecord');
+        updateButtonStates();
+    }
+
+
+    async function renderRecords() {
+        const records = await getAllRecords();
         recordTableBody.innerHTML = '';
         let totalDurationMs = 0;
 
@@ -45,23 +129,24 @@ document.addEventListener('DOMContentLoaded', () => {
             notesTd.contentEditable = true;
 
             dateTd.addEventListener('blur', () => {
-                updateRecordField(index, 'date', dateTd.textContent);
+                updateRecordField(record.id, 'date', dateTd.textContent);
             });
             timeInTd.addEventListener('blur', () => {
-                updateRecordField(index, 'timeIn', timeInTd.textContent);
+                updateRecordField(record.id, 'timeIn', timeInTd.textContent);
             });
             timeOutTd.addEventListener('blur', () => {
-                updateRecordField(index, 'timeOut', timeOutTd.textContent);
+                updateRecordField(record.id, 'timeOut', timeOutTd.textContent);
             });
             notesTd.addEventListener('blur', () => {
-                updateRecordField(index, 'notes', notesTd.textContent);
+                updateRecordField(record.id, 'notes', notesTd.textContent);
             });
 
             const removeBtn = document.createElement('button');
                 removeBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" height="1em" fill="currentColor" viewBox="0 0 512 512"><path d="M 496 256 Q 495 191 464 136 L 464 136 L 464 136 Q 432 81 376 48 Q 319 16 256 16 Q 193 16 136 48 Q 80 81 48 136 Q 17 191 16 256 Q 17 321 48 376 Q 80 431 136 464 Q 193 496 256 496 Q 319 496 376 464 Q 432 431 464 376 Q 495 321 496 256 L 496 256 Z M 0 256 Q 1 186 34 128 L 34 128 L 34 128 Q 68 70 128 34 Q 189 0 256 0 Q 323 0 384 34 Q 444 70 478 128 Q 511 186 512 256 Q 511 326 478 384 Q 444 442 384 478 Q 323 512 256 512 Q 189 512 128 478 Q 68 442 34 384 Q 1 326 0 256 L 0 256 Z M 160 160 L 168 160 L 160 160 L 196 160 L 218 131 L 218 131 Q 220 128 224 128 L 288 128 L 288 128 Q 292 128 294 131 L 316 160 L 316 160 L 328 160 L 352 160 Q 359 161 360 168 Q 359 175 352 176 L 343 176 L 343 176 L 330 354 L 330 354 Q 329 367 320 375 Q 311 384 298 384 L 214 384 L 214 384 Q 201 384 192 375 Q 183 367 182 354 L 169 176 L 169 176 L 160 176 L 160 176 Q 153 175 152 168 Q 153 161 160 160 L 160 160 Z M 216 160 L 296 160 L 216 160 L 296 160 L 284 144 L 284 144 L 228 144 L 228 144 L 216 160 L 216 160 Z M 327 176 L 185 176 L 327 176 L 185 176 L 198 353 L 198 353 Q 200 367 214 368 L 298 368 L 298 368 Q 312 367 314 353 L 327 176 L 327 176 Z" /></svg>`;
                 removeBtn.classList = "remove-btn";
                 removeBtn.addEventListener('click', () => {
-                    removeRecord(index);
+                    deleteRecord(record.id);
+                    renderRecords();
                 });
                 actionsTd.appendChild(removeBtn);
 
@@ -86,76 +171,41 @@ document.addEventListener('DOMContentLoaded', () => {
         updateButtonStates();
     }
 
-    function updateRecordField(index, field, value) {
-        records[index][field] = value;
-        if (field === 'timeIn' || field === 'timeOut') {
-            if (records[index].timeIn && records[index].timeOut) {
-                const timeIn = new Date(`${records[index].date} ${records[index].timeIn}`);
-                const timeOut = new Date(`${records[index].date} ${records[index].timeOut}`);
-                const durationMs = timeOut - timeIn;
-                const durationHrs = Math.floor(durationMs / 3600000);
-                const durationMins = Math.floor((durationMs % 3600000) / 60000);
-                records[index].duration = `${durationHrs}h ${durationMins}m`;
-            } else {
-                records[index].duration = '';
+    function updateRecordField(id, field, value) {
+        const transaction = db.transaction(['timeRecords'], 'readwrite');
+        const store = transaction.objectStore('timeRecords');
+        const request = store.get(id);
+
+        request.onsuccess = function(event) {
+            const record = event.target.result;
+            record[field] = value;
+
+            if (field === 'timeIn' || field === 'timeOut') {
+                if (record.timeIn && record.timeOut) {
+                    const timeIn = new Date(`${record.date} ${record.timeIn}`);
+                    const timeOut = new Date(`${record.date} ${record.timeOut}`);
+                    const durationMs = timeOut - timeIn;
+                    const durationHrs = Math.floor(durationMs / 3600000);
+                    const durationMins = Math.floor((durationMs % 3600000) / 60000);
+                    record.duration = `${durationHrs}h ${durationMins}m`;
+                } else {
+                    record.duration = '';
+                }
             }
+            saveRecord(record);
+            renderRecords();
         }
-        localStorage.setItem('timeRecords', JSON.stringify(records));
-        renderRecords();
     }
 
-    function addRecord(type) {
-        const now = new Date();
-        const nowString = now.toLocaleTimeString();
-        const dateString = now.toLocaleDateString();
-        
-        if (type === 'Clock In') {
-            currentRecord = {
-                date: dateString,
-                timeIn: nowString,
-                timeOut: null,
-                duration: null,
-                notes: ''
-            };
-            isClockedIn = true;
-        } else {
-            if (currentRecord && currentRecord.date === dateString) {
-                currentRecord.timeOut = nowString;
-                const timeIn = new Date(`${currentRecord.date} ${currentRecord.timeIn}`);
-                const timeOut = new Date(`${currentRecord.date} ${currentRecord.timeOut}`);
-                const durationMs = timeOut - timeIn;
-                const durationHrs = Math.floor(durationMs / 3600000);
-                const durationMins = Math.floor((durationMs % 3600000) / 60000);
-                currentRecord.duration = `${durationHrs}h ${durationMins}m`;
-                records.push(currentRecord);
-                currentRecord = null;
-                isClockedIn = false;
-            }
-        }
-        localStorage.setItem('timeRecords', JSON.stringify(records));
-        localStorage.setItem('isClockedIn', JSON.stringify(isClockedIn));
-        localStorage.setItem('currentRecord', JSON.stringify(currentRecord));
-        renderRecords();
-    }
-
-    function removeRecord(index) {
-        records.splice(index, 1);
-        localStorage.setItem('timeRecords', JSON.stringify(records));
-        renderRecords();
+    function toggleClass(el,con, ...cls) {
+        cls.map(e => el.classList.toggle(e, con));
     }
 
     function updateButtonStates() {
-        if (isClockedIn) {
-            clockInBtn.disabled = true;
-            clockInBtn.classList.add('opacity-50', 'cursor-not-allowed');
-            clockOutBtn.disabled = false;
-            clockOutBtn.classList.remove('opacity-50', 'cursor-not-allowed');
-        } else {
-            clockInBtn.disabled = false;
-            clockInBtn.classList.remove('opacity-50', 'cursor-not-allowed');
-            clockOutBtn.disabled = true;
-            clockOutBtn.classList.add('opacity-50', 'cursor-not-allowed');
-        }
+        clockInBtn.disabled = isClockedIn;
+        clockOutBtn.disabled = !isClockedIn;
+        toggleClass(clockInBtn, isClockedIn, 'opacity-50', 'cursor-not-allowed');
+        toggleClass(clockOutBtn, !isClockedIn, 'opacity-50', 'cursor-not-allowed');
     }
 
     function updateClock() {
@@ -174,7 +224,10 @@ document.addEventListener('DOMContentLoaded', () => {
         date.textContent = now.toLocaleString('en-US', { year: 'numeric', month: "short", weekday: 'long', day: "numeric"});
     }
 
-    function createPrintableTable() {
+    async function createPrintableTable() {
+        const records = await getAllRecords();
+        const timeRecord = records.map(record => {return `<tr><td>${record.date}</td><td>${record.notes || ''}</td><td>${record.timeIn || ''}</td><td>${record.timeOut || ''}</td><td>${record.duration || ''}</td>`}).join('')
+
         const printableTable = document.createElement('table');
         printableTable.id = "records"
         printableTable.innerHTML = `
@@ -187,32 +240,24 @@ document.addEventListener('DOMContentLoaded', () => {
                     <th>Duration</th>
                 </tr>
             </thead>
-            <tbody id="recordTableBody">
-                ${records.map(record => `
-                    <tr>
-                        <td>${record.date}</td>
-                        <td>${record.notes || ''}</td>
-                        <td>${record.timeIn || ''}</td>
-                        <td>${record.timeOut || ''}</td>
-                        <td>${record.duration || ''}</td>
-                    </tr>
-                `).join('')}
-            </tbody>
+            <tbody id="recordTableBody"></tbody>
             <tfoot id="recordTableFooter">
                 <tr>
                     <td colspan="4">Total Hours</td>
-                    <td>${totalHoursElement.textContent}</td>
+                    <td id="totalHours">${totalHoursElement.textContent}</td>
                 </tr>
             </tfoot>
         `;
-        return printableTable;
-        }
+        printableTable.querySelector('#recordTableBody').innerHTML = timeRecord;
 
-    function exportToPDF() {
-        var userInformation = JSON.parse(localStorage.getItem('dtrDetails'));
+        return printableTable.outerHTML;
+    }
+
+    async function exportToPDF() {
+        var userInformation = await getSetting('dtrDetails');
         var userName,role,emailAddress,dateRange,invoiceDate,clientName,clientEmail,clientRole,accountNumber,month,invoiceNum;
 
-        if ( userInformation != null && typeof userInformation == 'object' ) {
+        if ( userInformation ) {
             userName = document.getElementById('userName').value.toUpperCase();
             role = document.getElementById('role').value;
             emailAddress = document.getElementById('email').value;
@@ -247,9 +292,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     'date_range': dateRange,
                 }
             }
+
+            saveDetails(userInformation);
         }
 
-        saveDetails(userInformation);
+        let output = await createPrintableTable();
 
         const content = `
             <div>              
@@ -286,7 +333,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <hr>
                 <h2 style="text-align:center;text-transform:uppercase;line-height:1;margin: 0 0 0 0;">Timesheet / Invoice</h2>
                 <h4 style="text-align:center;color:blue;line-height:1;margin: 0 0 0 0;">Pay Period: ${userInformation.other.date_range}</h4>
-                ${createPrintableTable().outerHTML}
+                ${output}
             </div>
         `;
 
@@ -304,8 +351,8 @@ document.addEventListener('DOMContentLoaded', () => {
     function saveDetails( json_data ) {
         var userInformation;
 
-        if ( typeof json_data == 'object' && json_data != null) {
-            localStorage.setItem('dtrDetails', JSON.stringify(json_data));
+        if ( json_data ) {
+            saveSetting('dtrDetails', json_data);
         } else {
             const userName = document.getElementById('userName').value.toUpperCase();
             const role = document.getElementById('role').value;
@@ -341,16 +388,17 @@ document.addEventListener('DOMContentLoaded', () => {
                     'date_range': dateRange,
                 }
             }
-            localStorage.setItem('dtrDetails', JSON.stringify(userInformation));
+            saveSetting('dtrDetails', userInformation);
         }
         
 
         
     }
 
-    function formInit() {
-        const userInformation = JSON.parse(localStorage.getItem('dtrDetails'));
-        if (userInformation != null && typeof userInformation == 'object' ) {
+    async function formInit() {
+        let userInformation = await getSetting('dtrDetails');
+        // console.log(userInformation)
+        if ( userInformation ) {
             document.getElementById('userName').value = userInformation.user.name;
             document.getElementById('role').value = userInformation.user.role;
             document.getElementById('email').value = userInformation.user.email;
@@ -381,13 +429,37 @@ document.addEventListener('DOMContentLoaded', () => {
 
     clockInBtn.addEventListener('click', () => {
         if (!isClockedIn) {
-            addRecord('Clock In');
+            const now = new Date();
+            currentRecord = {
+                date: now.toLocaleDateString(),
+                timeIn: now.toLocaleTimeString(),
+                timeOut: null,
+                duration: null,
+                notes: ''
+            };
+            isClockedIn = true;
+            saveSetting('isClockedIn', isClockedIn);
+            saveSetting('currentRecord', currentRecord);
+            renderRecords();
         }
     });
 
     clockOutBtn.addEventListener('click', () => {
         if (isClockedIn) {
-            addRecord('Clock Out');
+            const now = new Date();
+            currentRecord.timeOut = now.toLocaleTimeString();
+            const timeIn = new Date(`${currentRecord.date} ${currentRecord.timeIn}`);
+            const timeOut = new Date(`${currentRecord.date} ${currentRecord.timeOut}`);
+            const durationMs = timeOut - timeIn;
+            const durationHrs = Math.floor(durationMs / 3600000);
+            const durationMins = Math.floor((durationMs % 3600000) / 60000);
+            currentRecord.duration = `${durationHrs}h ${durationMins}m`;
+            saveRecord(currentRecord);
+            currentRecord = null;
+            isClockedIn = false;
+            saveSetting('isClockedIn', isClockedIn);
+            saveSetting('currentRecord', currentRecord);
+            renderRecords();
         }
     });
 
