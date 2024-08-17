@@ -1,3 +1,8 @@
+@font-face {
+    font-family: 'clock';
+    src: url('assets/fonts/digital-7.ttf') format('truetype'),
+}
+
 body {
     font-family: Arial, sans-serif;
     background-color: #f0f0f0;
@@ -22,6 +27,11 @@ h1 {
     font-size: 24px;
     text-align: center;
     margin-bottom: 20px;
+    font-family: 'clock';
+}
+
+#date {
+    font-family: 'clock';
 }
 
 .controls {
@@ -61,13 +71,14 @@ button {
 body {
     font-family: Arial, sans-serif;
 }
+
 .container {
     max-width: 800px;
     margin: 0 auto;
     padding: 20px;
 }
 .clock {
-    font-size: 2em;
+    font-size: 4em;
     text-align: center;
     margin-bottom: 20px;
 }
@@ -79,12 +90,7 @@ button {
     padding: 10px 20px;
     margin: 5px;
 }
-form {
-    margin-bottom: 20px;
-}
-form div {
-    margin-bottom: 10px;
-}
+
 label {
     display: block;
     margin-bottom: 5px;
@@ -141,28 +147,4 @@ button.remove-btn {
 tfoot#recordTableFooter td:not(#totalHours) {
     text-align: right;
     padding-right: 10%;
-}
-
-/* Form Group */
-form#additionalInfoForm {display: flex;flex-direction: column;}
-
-form#additionalInfoForm > div:nth-child(1) {
-    display: flex;
-    align-content: stretch;
-    justify-content: space-evenly;
-}
-
-form#additionalInfoForm > div:nth-child(1) > div {
-    width: 48%;
-}
-
-.form-buttons button {
-    border: 0;
-    font-size: 31px;
-    padding: 0;
-    height: 34px;
-    background-color: transparent;
-    margin-left: 20px;
-    margin-right: 20px;
-    border-bottom: 1px solid #717171;
 }
