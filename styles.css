@@ -143,8 +143,36 @@ button.remove-btn {
 }
 
 
+/* Export Custom Design */
+#records.export td {
+    padding: 4px;
+    line-height: 1;
+}
+
+#records.export tfoot#recordTableFooter td {
+    padding: 6px 0 5px 4px;
+}
+
+#records.export tfoot#recordTableFooter td:not(#totalHours) {
+    text-align: right;
+    padding-right: 10%;
+}
+
+table#export-heading td.heading {
+    width:20%;
+}
+
+table#export-heading td:not(.heading) {
+    width:40%;
+}
+
+table#export-heading {
+    margin-bottom:10px;
+}
+
 /* Table footer */
 tfoot#recordTableFooter td:not(#totalHours) {
     text-align: right;
     padding-right: 10%;
 }
+
