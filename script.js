@@ -1,8 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
     const clockInBtn = document.getElementById('clockInBtn');
     const clockOutBtn = document.getElementById('clockOutBtn');
-    const exportBtn = document.getElementById('exportBtn');
-    const configBtn = document.getElementById('configBtn');
     const saveBtn = document.getElementById('saveDetails');
     const recordTableBody = document.getElementById('recordTableBody');
     const totalHoursElement = document.getElementById('totalHours');
@@ -13,13 +11,70 @@ document.addEventListener('DOMContentLoaded', () => {
     const secondHand = document.querySelector('#clock .second');
     const timePeriod = document.querySelector('#clock .period');
 
+    const exportByDateRange = document.querySelector('#exportByDateRange');
+    const startDateInput = document.querySelector('input[name="startDate"]');
+    const endDateInput = document.querySelector('input[name="endDate"]');
+
+    const fontSizeInput = document.getElementById('fontSize');
+    const fontSizeOutput = document.getElementById('fontSizeOutput');
+    const dateFormatInput = document.getElementById('dateFormat');
+
+    const modalConfigs = [
+        {
+            modalID: 'info-modal',
+            type: 'standard',
+            elements: [
+                {
+                    selector: 'infoBtn',
+                    type: 'id',
+                    action: openModal
+                },
+                {
+                    selector: '#info-modal .close-modal',
+                    type: 'css',
+                    action: closeModal
+                }
+            ]
+        },
+        {
+            modalID: 'export-modal',
+            type: 'standard',
+            elements: [
+                {
+                    selector: 'exportBtn',
+                    type: 'id',
+                    action: openModal
+                },
+                {
+                    selector: '#export-modal .close-modal',
+                    type: 'css',
+                    action: closeModal
+                }
+            ]
+        },
+        {
+            modalID: 'filter-modal',
+            type: 'mini',
+            elements: [
+                {
+                    selector: 'filterBtn',
+                    type: 'id',
+                    action: openModal
+                },
+                {
+                    selector: '#filter-modal .close-modal',
+                    type: 'css',
+                    action: closeModal
+                }
+            ]
+        }
+    ];
 
     let db;
     let isClockedIn = false;
     let currentRecord = null;
-
-    const modal = document.querySelector('.modal');
-    const closeBtn = document.querySelector('.modal-header button.close-modal');
+    let defaultDateFormat = 'en-US';
+    let fontSize = null;
 
     const request = indexedDB.open('DTRDatabase', 1);
 
@@ -34,6 +89,7 @@ document.addEventListener('DOMContentLoaded', () => {
         loadSettings();
         renderRecords();
         formInit();
+        setClockDate();
     }
 
     request.onerror = (e) => {
@@ -99,16 +155,29 @@ document.addEventListener('DOMContentLoaded', () => {
     async function loadSettings() {
         isClockedIn = await getSetting('isClockedIn') || false;
         currentRecord = await getSetting('currentRecord');
+        dateFormatInput.value = defaultDateFormat = await getSetting('dateFormat') || 'en-US';
+        fontSizeOutput.textContent = (fontSizeInput.value = fontSize = await getSetting('fontSize') || 16) + "px";
         updateButtonStates();
     }
 
 
-    async function renderRecords() {
-        const records = await getAllRecords();
+    async function renderRecords(...params) {
+        let records = await getAllRecords();
         recordTableBody.innerHTML = '';
         let totalDurationMs = 0;
 
-        records.forEach((record, index) => {
+        if (params.length > 0) {
+            const rangeToExport = getDateRange(params[0], params[1], params[2])
+            const startDate = new Date(rangeToExport.startDate)
+            const endDate = new Date(rangeToExport.endDate)
+            records = records
+            .filter(item => {
+                const itemDate = new Date(item.defDate)
+                return itemDate >= startDate && itemDate <= endDate
+            });
+        }
+
+        records.forEach((record) => {
             const tr = document.createElement('tr');
             const dateTd = document.createElement('td');
             const notesTd = document.createElement('td');
@@ -182,8 +251,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (field === 'timeIn' || field === 'timeOut') {
                 if (record.timeIn && record.timeOut) {
-                    const timeIn = new Date(`${record.date} ${record.timeIn}`);
-                    const timeOut = new Date(`${record.date} ${record.timeOut}`);
+                    const timeIn = new Date(`${record.defDate} ${record.timeIn}`);
+                    const timeOut = new Date(`${record.defDate} ${record.timeOut}`);
                     const durationMs = timeOut - timeIn;
                     const durationHrs = Math.floor(durationMs / 3600000);
                     const durationMins = Math.floor((durationMs % 3600000) / 60000);
@@ -219,32 +288,107 @@ document.addEventListener('DOMContentLoaded', () => {
         secondHand.textContent = time[2];
     }
 
-    function setClockDate() {
+    async function setClockDate() {
         const now = new Date();
-        date.textContent = now.toLocaleString('en-US', { year: 'numeric', month: "short", weekday: 'long', day: "numeric"});
+        const dateFormat = await getSetting('dateFormat');
+        const format = { year: 'numeric', month: "short", weekday: 'long', day: "numeric"};
+        if ( dateFormat ) {
+            defaultDateFormat = dateFormat;
+            date.textContent = now.toLocaleString(dateFormat, format);
+        } else {
+            date.textContent = now.toLocaleString(defaultDateFormat, format);
+        }
+        
     }
 
-    async function createPrintableTable() {
+    function getDateRange(phrase, ...dateRange) {
+        const now = new Date();
+        let startDate, endDate;
+    
+        switch (phrase.toLowerCase()) {
+            case 'previous month':
+                // Get the previous month
+                startDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+                endDate = new Date(now.getFullYear(), now.getMonth(), 0);
+                break;
+    
+            case 'previous year':
+                // Get the previous year
+                startDate = new Date(now.getFullYear() - 1, 0, 1);
+                endDate = new Date(now.getFullYear() - 1, 11, 31);
+                break;
+    
+            case 'this month':
+                // Get the current month
+                startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+                endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+                break;
+    
+            case 'this year':
+                // Get the current year
+                startDate = new Date(now.getFullYear(), 0, 1);
+                endDate = new Date(now.getFullYear(), 11, 31);
+                break;
+            case 'range':
+                startDate = new Date(dateRange[0]);
+                endDate = new Date(dateRange[1]);
+                break;
+            default:
+                throw new Error('Invalid phrase provided');
+        }
+    
+        return {
+            startDate: startDate.toLocaleString('en-US', { year: 'numeric', month: "numeric", day: "numeric"}),
+            endDate: endDate.toLocaleString('en-US', { year: 'numeric', month: "numeric", day: "numeric"})
+        };
+    }
+
+    async function createPrintableTable(phrase, ...dateRange) {
         const records = await getAllRecords();
-        const timeRecord = records.map(record => {return `<tr><td>${record.date}</td><td>${record.notes || ''}</td><td>${record.timeIn || ''}</td><td>${record.timeOut || ''}</td><td>${record.duration || ''}</td>`}).join('')
+        const rangeToExport = getDateRange(phrase, dateRange[0], dateRange[1])
+        const startDate = new Date(rangeToExport.startDate)
+        const endDate = new Date(rangeToExport.endDate)
+        let totalDurationMs = 0;
+        const timeRecord = records
+        .filter(item => {
+            const itemDate = new Date(item.defDate)
+            return itemDate >= startDate && itemDate <= endDate
+        })
+        .map((record) => {
+            if (record.duration) {
+                const [hours, minutes] = record.duration.split(' ').map(part => parseInt(part));
+                totalDurationMs += (hours * 3600000) + (minutes * 60000);
+            }
+            return `<tr><td>${record.date}</td><td>${record.timeIn || ''}</td><td>${record.timeOut || ''}</td><td>${record.duration || ''}</td><td>${record.notes || ''}</td>`
+        })
+        .join('');
+
+        // const timeRecord = records.map(record => {return `<tr><td>${record.date}</td><td>${record.notes || ''}</td><td>${record.timeIn || ''}</td><td>${record.timeOut || ''}</td><td>${record.duration || ''}</td>`}).join('')
+
+        const totalDurationHrs = Math.floor(totalDurationMs / 3600000);
+        const totalDurationMins = Math.floor((totalDurationMs % 3600000) / 60000);
+        let totalHours = `${totalDurationHrs}h ${totalDurationMins}m`;
 
         const printableTable = document.createElement('table');
+        printableTable.style.fontSize = fontSize+"px";
         printableTable.id = "records"
+        printableTable.classList.add('export');
         printableTable.innerHTML = `
             <thead>
                 <tr>
                     <th>Date</th>
-                    <th>Notes</th>
                     <th>Time In</th>
                     <th>Time Out</th>
                     <th>Duration</th>
+                    <th>Notes</th>
                 </tr>
             </thead>
             <tbody id="recordTableBody"></tbody>
             <tfoot id="recordTableFooter">
                 <tr>
-                    <td colspan="4">Total Hours</td>
-                    <td id="totalHours">${totalHoursElement.textContent}</td>
+                    <td colspan="3">Total Hours</td>
+                    <td id="totalHours">${totalHours}</td>
+                    <td></td>
                 </tr>
             </tfoot>
         `;
@@ -253,7 +397,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return printableTable.outerHTML;
     }
 
-    async function exportToPDF() {
+    async function exportToPDF(phrase, start, end) {
         var userInformation = await getSetting('dtrDetails');
         var userName,role,emailAddress,dateRange,invoiceDate,clientName,clientEmail,clientRole,accountNumber,month,invoiceNum;
 
@@ -296,43 +440,43 @@ document.addEventListener('DOMContentLoaded', () => {
             saveDetails(userInformation);
         }
 
-        let output = await createPrintableTable();
+        let output = await createPrintableTable(phrase, start, end);
 
         const content = `
             <div>              
-                <table id="export-heading">
+                <table id="export-heading" style="font-size:${fontSize}px">
                     <tr>
-                        <td rowspan="3" style="font-weight:bold;text-align:right;padding-right:20px;">From:</td>
-                        <td colspan="2" style="text-transform:uppercase;">  ${userInformation.user.name}</td>
-                        <td colspan="2" style="padding-left:60px;">Invoice Date: ${userInformation.other.invoice_date}</td>
+                        <td class="heading" rowspan="3" style="font-weight:bold;text-align:right;padding-right:20px;">From:</td>
+                        <td colspan="4" style="font-weight:bold;text-transform:uppercase;">  ${userInformation.user.name}</td>
+                        <td colspan="4" style="font-weight:bold;padding-left:60px;">Invoice Date: ${userInformation.other.invoice_date}</td>
                     </tr>
                     <tr>
-                        <td colspan="2">  ${userInformation.user.role}</td>
-                        <td colspan="2" style="padding-left:60px;">Invoice Number: ${userInformation.other.invoice_no}</td>
+                        <td colspan="4">  ${userInformation.user.role}</td>
+                        <td colspan="4" style="font-weight:bold;padding-left:60px;">Invoice Number: ${userInformation.other.invoice_no}</td>
                     </tr>
                     <tr>
-                        <td colspan="2">  ${userInformation.user.email}</td>
+                        <td colspan="4">  ${userInformation.user.email}</td>
                     </tr>
                     <tr>
-                        <td colspan="5"> </td>
+                        <td colspan="11"> </td>
                     </tr>
                     <tr>
-                        <td rowspan="3" style="font-weight:bold;text-align:right;padding-right:20px;">To:</td>
-                        <td colspan="2">  ${userInformation.client.name}</td>
-                        <td colspan="2" style="padding-left:60px;">MONTH: ${userInformation.other.month}</td>
+                        <td class="heading" rowspan="3" style="font-weight:bold;text-align:right;padding-right:20px;">To:</td>
+                        <td colspan="4" style="font-weight:bold;text-transform:uppercase;">  ${userInformation.client.name}</td>
+                        <td colspan="4" style="font-weight:bold;padding-left:60px;">MONTH: ${userInformation.other.month}</td>
                     </tr>
                     <tr>
-                        <td colspan="2">  ${userInformation.client.role}</td>
-                        <td colspan="2" style="padding-left:60px;">BPI Bank account number:</td>
+                        <td colspan="4">  ${userInformation.client.role}</td>
+                        <td colspan="4" style="padding-left:60px;">BPI Bank account number:</td>
                     </tr>
                     <tr>
-                        <td colspan="2">  ${userInformation.client.email}</td>
-                        <td colspan="2" style="padding-left:60px;">${userInformation.other.account_no}</td>
+                        <td colspan="4">  ${userInformation.client.email}</td>
+                        <td colspan="4" style="font-weight:bold;padding-left:60px;">${userInformation.other.account_no}</td>
                     </tr>
                 </table>
                 <hr>
-                <h2 style="text-align:center;text-transform:uppercase;line-height:1;margin: 0 0 0 0;">Timesheet / Invoice</h2>
-                <h4 style="text-align:center;color:blue;line-height:1;margin: 0 0 0 0;">Pay Period: ${userInformation.other.date_range}</h4>
+                <h2 style="text-align:center;text-transform:uppercase;line-height:1;margin: 10px 0 0 0;font-weight:bold;font-size:22px;">Timesheet / Invoice</h2>
+                <h4 style="font-weight:bold;text-align:center;color:blue;line-height:1;margin:0;font-size:12px;">Pay Period: ${userInformation.other.date_range}</h4>
                 ${output}
             </div>
         `;
@@ -368,6 +512,9 @@ document.addEventListener('DOMContentLoaded', () => {
             const month = document.getElementById('monthToInvoice').value.toUpperCase();
             const invoiceNum = document.getElementById('invoiceNum').value;
 
+            const dateFormat = dateFormatInput.value;
+            const fontSize = fontSizeInput.value;
+
             userInformation = {
                 'user': {
                     'name': userName,
@@ -389,10 +536,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
             saveSetting('dtrDetails', userInformation);
+            saveSetting('dateFormat', dateFormat);
+            saveSetting('fontSize', fontSize);
         }
-        
-
-        
     }
 
     async function formInit() {
@@ -416,22 +562,49 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   
     // Function to open the modal
-    function openModal() {
+    function openModal(modal) {
         modal.classList.add('show');
         modal.classList.remove('hidden');
     }
   
     // Function to close the modal
-    function closeModal() {
+    function closeModal(modal) {
         modal.classList.remove('show');
         modal.classList.add('hidden');
+    }
+
+    // Function to handle attaching event listeners
+    const attachModalEvents = (configs) => {
+        configs.forEach( config => {
+            const modal = document.getElementById(config.modalID);
+            config.elements.forEach( element => {
+                const elementSelector = (element.type == 'id') ? document.getElementById(element.selector) : document.querySelector(element.selector);
+                if (modal && elementSelector) {
+                    elementSelector.addEventListener('click', () => {element.action(modal)});
+                }
+            });
+            if (modal) {
+                const handleModalClick = (e) => {
+                    if (
+                        (config.type === 'standard' && e.target.classList.contains('modal-background')) ||
+                        (config.type === 'mini' && !modal.parentNode.contains(e.target))
+                    ) {
+                        closeModal(modal);
+                    }
+                };
+            
+                const eventTarget = config.type === 'standard' ? modal : document;
+                eventTarget.addEventListener('click', handleModalClick);
+            }
+        });
     }
 
     clockInBtn.addEventListener('click', () => {
         if (!isClockedIn) {
             const now = new Date();
             currentRecord = {
-                date: now.toLocaleDateString(),
+                date: now.toLocaleDateString(defaultDateFormat),
+                defDate: now.toLocaleDateString(),
                 timeIn: now.toLocaleTimeString(),
                 timeOut: null,
                 duration: null,
@@ -448,8 +621,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (isClockedIn) {
             const now = new Date();
             currentRecord.timeOut = now.toLocaleTimeString();
-            const timeIn = new Date(`${currentRecord.date} ${currentRecord.timeIn}`);
-            const timeOut = new Date(`${currentRecord.date} ${currentRecord.timeOut}`);
+            const timeIn = new Date(`${currentRecord.defDate} ${currentRecord.timeIn}`);
+            const timeOut = new Date(`${currentRecord.defDate} ${currentRecord.timeOut}`);
             const durationMs = timeOut - timeIn;
             const durationHrs = Math.floor(durationMs / 3600000);
             const durationMins = Math.floor((durationMs % 3600000) / 60000);
@@ -463,20 +636,35 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    exportBtn.addEventListener('click', exportToPDF);
+    
+    document.querySelectorAll('button[name="timePeriod"]').forEach((el) => {
+        el.addEventListener('click', (e) => {
+            e.preventDefault();
+            const type = el.getAttribute('data-type');
+            if ( type == "export") {
+                exportToPDF(el.value);
+            } else if ( type == "filter" ) {
+                renderRecords(el.value);
+            }
+        });
+    });
+
+    exportByDateRange.addEventListener('click', ()=> {
+        exportToPDF('range',startDateInput.value, endDateInput.value);
+    });
+
 
     saveBtn.addEventListener('click', () => {
         saveDetails(null)
     });
 
-    configBtn.addEventListener('click', openModal);
-    closeBtn.addEventListener('click', closeModal);
-    // Add event listener to the modal background to close the modal when clicked
-    modal.addEventListener('click', (e) => {
-        if (e.target.classList.contains('modal-background')) {
-        closeModal();
-        }
+    fontSizeInput.addEventListener('input', (e) => {
+        const value = e.target.value;
+        fontSizeOutput.textContent = `${value}px`;
     });
+     
+    // Initialize modal events
+    attachModalEvents(modalConfigs);
 
     formInit();
     renderRecords();
