@@ -28,24 +28,24 @@
                     <button id="clockOutBtn" class="clock-out-btn w-32 bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded" :class="{ 'opacity-50 cursor-not-allowed': isClockOutDisabled }">Clock Out</button>
                 </div>
                 <div class="actions">
-                    <button id="exportBtn" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                    <button id="exportBtn" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" title="Export Timesheet">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m.75 12 3 3m0 0 3-3m-3 3v-6m-1.5-9H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
                           </svg>                          
                     </button>
-                    <button id="infoBtn" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
-                          <path stroke-linecap="round" stroke-linejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z" />
-                        </svg>                                                  
+                    <button id="infoBtn" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded" title="Information and Additional Settings">
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M11.42 15.17 17.25 21A2.652 2.652 0 0 0 21 17.25l-5.877-5.877M11.42 15.17l2.496-3.03c.317-.384.74-.626 1.208-.766M11.42 15.17l-4.655 5.653a2.548 2.548 0 1 1-3.586-3.586l6.837-5.63m5.108-.233c.55-.164 1.163-.188 1.743-.14a4.5 4.5 0 0 0 4.486-6.336l-3.276 3.277a3.004 3.004 0 0 1-2.25-2.25l3.276-3.276a4.5 4.5 0 0 0-6.336 4.486c.091 1.076-.071 2.264-.904 2.95l-.102.085m-1.745 1.437L5.909 7.5H4.5L2.25 3.75l1.5-1.5L7.5 4.5v1.409l4.26 4.26m-1.745 1.437 1.745-1.437m6.615 8.206L15.75 15.75M4.867 19.125h.008v.008h-.008v-.008Z" />
+                      </svg>                                                                        
                     </button>
                 </div>
             </section>
             <section class="w-full md:w-full xl:w-1/2 p-4 md:p-6">
                 
                 <div class="flex items-center justify-between">
-                  <h2 class="">Time Records</h2>
+                  <h2 class="font-bold text-lg">Time Records</h2>
                   <div class="mini-box relative text-right w-3/4">
-                    <button id="filterBtn" class="bg-violet-500 hover:bg-violet-700 text-white font-bold py-2 px-4 rounded">
+                    <button id="filterBtn" class="bg-violet-500 hover:bg-violet-700 text-white font-bold py-2 px-4 rounded" title="Filter Table Date">
                       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 0 1-.659 1.591l-5.432 5.432a2.25 2.25 0 0 0-.659 1.591v2.927a2.25 2.25 0 0 1-1.244 2.013L9.75 21v-6.568a2.25 2.25 0 0 0-.659-1.591L3.659 7.409A2.25 2.25 0 0 1 3 5.818V4.774c0-.54.384-1.006.917-1.096A48.32 48.32 0 0 1 12 3Z" />
                       </svg>                      
@@ -68,18 +68,23 @@
                         </div>
                       </div>
                       <hr class="mt-2">
-                      <div class="flex flex-wrap -mx-4 mt-3">
+                      <div class="-mx-4 flex flex-wrap items-center justify-center mt-3">
                         <div class="w-full">
                           <h3 class="font-bold p-2 pb-0 pt-0">Date Range</h3>
                         </div>
-                        <div class="w-full md:w-1/2 xl:w-1/2 p-2">
+                        <div class="w-full md:w-2/5 xl:w-2/5 p-2">
                           <label for="startDate" class="block text-sm font-medium text-gray-700">Start Date:</label>
-                          <input type="date" id="startDate" name="startDate" class="mt-1 block w-full py-2 pl-4 text-sm text-gray-700 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                          <input type="date" id="startDate" name="startDate" data-type="filter" class="mt-1 block w-full py-2 pl-4 text-sm text-gray-700 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" pattern="\d{2}/\d{2}/\d{4}" placeholder="mm/dd/yyyy">
                         </div>
-                        <div class="w-full md:w-1/2 xl:w-1/2 p-2">
+                        <div class="w-full md:w-2/5 xl:w-2/5 p-2">
                           <label for="endDate" class="block text-sm font-medium text-gray-700">End Date:</label>
-                          <input type="date" id="endDate" name="endDate" class="mt-1 block w-full py-2 pl-4 text-sm text-gray-700 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                          <input type="date" id="endDate" name="endDate" data-type="filter" class="mt-1 block w-full py-2 pl-4 text-sm text-gray-700 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" min="01-01-1900" max="12-31-2100">
                         </div>
+                        <button id="filterByDateRange" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded" data-type="filter" name="byDateRange">
+                          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="m15.75 15.75-2.489-2.489m0 0a3.375 3.375 0 1 0-4.773-4.773 3.375 3.375 0 0 0 4.774 4.774ZM21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                          </svg>                          
+                        </button>
                       </div>
                     </div>
                   </div>
@@ -205,9 +210,10 @@
       
           <!-- Modal footer -->
           <div class="modal-footer p-2 border-t border-gray-200">
-            <button id="saveDetails" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
-              </svg></button>
+            <button id="saveDetails" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 3.75H6.912a2.25 2.25 0 0 0-2.15 1.588L2.35 13.177a2.25 2.25 0 0 0-.1.661V18a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18v-4.162c0-.224-.034-.447-.1-.661L19.24 5.338a2.25 2.25 0 0 0-2.15-1.588H15M2.25 13.5h3.86a2.25 2.25 0 0 1 2.012 1.244l.256.512a2.25 2.25 0 0 0 2.013 1.244h3.218a2.25 2.25 0 0 0 2.013-1.244l.256-.512a2.25 2.25 0 0 1 2.013-1.244h3.859M12 3v8.25m0 0-3-3m3 3 3-3" /></svg>            
+            </button>
           </div>
         </div>
     </div>
@@ -247,20 +253,21 @@
                 </div>
                 <div class="w-full md:w-1/2 xl:w-1/2 p-2">
                   <label for="startDate" class="block text-sm font-medium text-gray-700">Start Date:</label>
-                  <input type="date" id="startDate" name="startDate" class="mt-1 block w-full py-2 pl-4 text-sm text-gray-700 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                  <input type="date" id="startDate" name="startDate" data-type="export" class="mt-1 block w-full py-2 pl-4 text-sm text-gray-700 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" pattern="\d{2}/\d{2}/\d{4}" placeholder="mm/dd/yyyy">
                 </div>
                 <div class="w-full md:w-1/2 xl:w-1/2 p-2">
                   <label for="endDate" class="block text-sm font-medium text-gray-700">End Date:</label>
-                  <input type="date" id="endDate" name="endDate" class="mt-1 block w-full py-2 pl-4 text-sm text-gray-700 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                  <input type="date" id="endDate" name="endDate" data-type="export" class="mt-1 block w-full py-2 pl-4 text-sm text-gray-700 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" pattern="\d{2}/\d{2}/\d{4}" placeholder="mm/dd/yyyy">
                 </div>
               </div>
           </form>
     
         <!-- Modal footer -->
         <div class="modal-footer p-2 border-t border-gray-200">
-          <button id="exportByDateRange" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
-            </svg></button>
+          <button id="exportByDateRange" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded" data-type="export" name="byDateRange">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m.75 12 3 3m0 0 3-3m-3 3v-6m-1.5-9H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" /></svg>            
+          </button>
         </div>
       </div>
     </div>

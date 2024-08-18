@@ -11,10 +11,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const secondHand = document.querySelector('#clock .second');
     const timePeriod = document.querySelector('#clock .period');
 
-    const exportByDateRange = document.querySelector('#exportByDateRange');
-    const startDateInput = document.querySelector('input[name="startDate"]');
-    const endDateInput = document.querySelector('input[name="endDate"]');
-
     const fontSizeInput = document.getElementById('fontSize');
     const fontSizeOutput = document.getElementById('fontSizeOutput');
     const dateFormatInput = document.getElementById('dateFormat');
@@ -172,7 +168,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const endDate = new Date(rangeToExport.endDate)
             records = records
             .filter(item => {
-                const itemDate = new Date(item.defDate)
+                const itemDate = new Date(item.date)
                 return itemDate >= startDate && itemDate <= endDate
             });
         }
@@ -251,8 +247,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (field === 'timeIn' || field === 'timeOut') {
                 if (record.timeIn && record.timeOut) {
-                    const timeIn = new Date(`${record.defDate} ${record.timeIn}`);
-                    const timeOut = new Date(`${record.defDate} ${record.timeOut}`);
+                    const timeIn = new Date(`${record.date} ${record.timeIn}`);
+                    const timeOut = new Date(`${record.date} ${record.timeOut}`);
                     const durationMs = timeOut - timeIn;
                     const durationHrs = Math.floor(durationMs / 3600000);
                     const durationMins = Math.floor((durationMs % 3600000) / 60000);
@@ -351,7 +347,7 @@ document.addEventListener('DOMContentLoaded', () => {
         let totalDurationMs = 0;
         const timeRecord = records
         .filter(item => {
-            const itemDate = new Date(item.defDate)
+            const itemDate = new Date(item.date)
             return itemDate >= startDate && itemDate <= endDate
         })
         .map((record) => {
@@ -359,7 +355,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 const [hours, minutes] = record.duration.split(' ').map(part => parseInt(part));
                 totalDurationMs += (hours * 3600000) + (minutes * 60000);
             }
-            return `<tr><td>${record.date}</td><td>${record.timeIn || ''}</td><td>${record.timeOut || ''}</td><td>${record.duration || ''}</td><td>${record.notes || ''}</td>`
+            const customDate = new Date(record.date)
+            return `<tr><td>${customDate.toLocaleDateString(defaultDateFormat)}</td><td>${record.timeIn || ''}</td><td>${record.timeOut || ''}</td><td>${record.duration || ''}</td><td>${record.notes || ''}</td>`
         })
         .join('');
 
@@ -603,8 +600,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!isClockedIn) {
             const now = new Date();
             currentRecord = {
-                date: now.toLocaleDateString(defaultDateFormat),
-                defDate: now.toLocaleDateString(),
+                date: now.toLocaleDateString(),
                 timeIn: now.toLocaleTimeString(),
                 timeOut: null,
                 duration: null,
@@ -621,8 +617,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (isClockedIn) {
             const now = new Date();
             currentRecord.timeOut = now.toLocaleTimeString();
-            const timeIn = new Date(`${currentRecord.defDate} ${currentRecord.timeIn}`);
-            const timeOut = new Date(`${currentRecord.defDate} ${currentRecord.timeOut}`);
+            const timeIn = new Date(`${currentRecord.date} ${currentRecord.timeIn}`);
+            const timeOut = new Date(`${currentRecord.date} ${currentRecord.timeOut}`);
             const durationMs = timeOut - timeIn;
             const durationHrs = Math.floor(durationMs / 3600000);
             const durationMins = Math.floor((durationMs % 3600000) / 60000);
@@ -649,10 +645,19 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    exportByDateRange.addEventListener('click', ()=> {
-        exportToPDF('range',startDateInput.value, endDateInput.value);
+    document.querySelectorAll('button[name="byDateRange"]').forEach((el) => {
+        el.addEventListener('click', (e) => {
+            e.preventDefault();
+            const type = el.getAttribute('data-type');
+            const startDate = document.querySelector('input[name="startDate"][data-type="'+type+'"]').value;
+            const endDate = document.querySelector('input[name="endDate"][data-type="'+type+'"]').value;
+            if ( type == "export") {
+                exportToPDF("range",startDate,endDate);
+            } else if ( type == "filter" ) {
+                renderRecords("range",startDate,endDate);
+            }
+        });
     });
-
 
     saveBtn.addEventListener('click', () => {
         saveDetails(null)
