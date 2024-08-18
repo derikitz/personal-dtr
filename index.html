@@ -53,7 +53,7 @@
                     <div id="filter-modal" class="absolute top-0 left-0 w-full bg-white shadow-md py-2 px-4 rounded hidden group-hover:block text-left">
                       <div class="flex flex-wrap -mx-4">
                         <div class="flex w-full items-center justify-between">
-                          <h3 class="font-bold pl-2">Time Periods</h3>
+                          <h3 class="font-bold pl-2 text-sm">Time Periods</h3>
                           <button class="close-modal text-gray-400 hover:text-gray-900 transition duration-300 mr-2">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
@@ -70,15 +70,15 @@
                       <hr class="mt-2">
                       <div class="-mx-4 flex flex-wrap items-center justify-center mt-3">
                         <div class="w-full">
-                          <h3 class="font-bold p-2 pb-0 pt-0">Date Range</h3>
+                          <h3 class="font-bold p-2 pb-0 pt-0 text-sm">Date Range</h3>
                         </div>
                         <div class="w-full md:w-2/5 xl:w-2/5 p-2">
-                          <label for="startDate" class="block text-sm font-medium text-gray-700">Start Date:</label>
-                          <input type="date" id="startDate" name="startDate" data-type="filter" class="mt-1 block w-full py-2 pl-4 text-sm text-gray-700 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" pattern="\d{2}/\d{2}/\d{4}" placeholder="mm/dd/yyyy">
+                          <label for="startDate" class="block text-xs font-medium text-gray-700">Start Date:</label>
+                          <input type="date" id="startDate" name="startDate" data-type="filter" class="mt-1 text-xs block w-full py-2 pl-4 text-sm text-gray-700 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" pattern="\d{2}/\d{2}/\d{4}" placeholder="mm/dd/yyyy">
                         </div>
                         <div class="w-full md:w-2/5 xl:w-2/5 p-2">
-                          <label for="endDate" class="block text-sm font-medium text-gray-700">End Date:</label>
-                          <input type="date" id="endDate" name="endDate" data-type="filter" class="mt-1 block w-full py-2 pl-4 text-sm text-gray-700 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" min="01-01-1900" max="12-31-2100">
+                          <label for="endDate" class="block text-xs font-medium text-gray-700">End Date:</label>
+                          <input type="date" id="endDate" name="endDate" data-type="filter" class="mt-1 text-xs block w-full py-2 pl-4 text-sm text-gray-700 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" min="01-01-1900" max="12-31-2100">
                         </div>
                         <button id="filterByDateRange" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded" data-type="filter" name="byDateRange">
                           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
@@ -191,15 +191,15 @@
                   <div class="w-full">
                     <h3 class="font-bold p-2 pb-0 pt-0">Additional Settings</h3>
                   </div>
-                  <div class="w-full md:w-2/3 xl:w-2/3 p-2">
+                  <div class="w-full md:w-2/4 xl:w-2/4 p-2">
                     <label for="dateFormat" class="block text-sm font-medium text-gray-700 ">Date Format:</label>
                     <select id="dateFormat" name="dateFormat" required class="mt-1 block py-2 pl-4 text-sm text-gray-700 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 w-2/3">
                       <option value="en-US">US - (DD/MM/YYYY)</option>
                       <option value="en-NZ">NZ - (MM/DD/YYYY)</option>
                     </select>
                   </div>
-                  <div class="w-full md:w-2/3 xl:w-2/3 p-2">
-                    <label for="fontSize" class="block text-sm font-medium text-gray-700 ">Font Size:</label>
+                  <div class="w-full md:w-2/4 xl:w-2/4 p-2">
+                    <label for="fontSize" class="block text-sm font-medium text-gray-700 ">Font Size (Export to PDF):</label>
                     <div class="flex items-center">
                       <input type="range" id="fontSize" min="1" max="36" value="16" class="w-2/3 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
                       <span id="fontSizeOutput" class="ml-2 text-sm text-gray-600">16px</span>
