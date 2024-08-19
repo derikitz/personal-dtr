@@ -84,8 +84,9 @@ document.addEventListener('DOMContentLoaded', () => {
         db = e.target.result;
         loadSettings();
         renderRecords();
-        formInit();
         setClockDate();
+        migrateLocalStorage();
+        formInit();
     }
 
     request.onerror = (e) => {
@@ -146,6 +147,37 @@ document.addEventListener('DOMContentLoaded', () => {
                 };
             }
         });
+    }
+
+    function migrateLocalStorage() {
+        let data = {
+            'isClockedIn': JSON.parse(localStorage.getItem('isClockedIn')),
+            'currentRecord': JSON.parse(localStorage.getItem('currentRecord')),
+            'timeRecords': JSON.parse(localStorage.getItem('timeRecords')),
+            'dtrDetails': JSON.parse(localStorage.getItem('dtrDetails'))
+        }
+
+        if (data.isClockedIn) {
+            localStorage.removeItem('isClockedIn');
+            saveSetting('isClockedIn', data.isClockedIn);
+        }
+
+        if (data.currentRecord) {
+            localStorage.removeItem('currentRecord');
+            saveSetting('currentRecord', data.currentRecord);
+        }
+
+        if (data.timeRecords) {
+            localStorage.removeItem('timeRecords');
+            data.timeRecords.forEach((record) => {
+                saveRecord(record);
+            });
+        }
+
+        if (data.dtrDetails) {
+            localStorage.removeItem('dtrDetails');
+            saveSetting('dtrDetails', data.dtrDetails);
+        }
     }
 
     async function loadSettings() {
