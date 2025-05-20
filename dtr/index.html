@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daily Time Record</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@heroicons/react@1.0.3/dist/heroicons.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.2/html2pdf.bundle.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body>
+    <main class="container mx-auto p-4 md:p-6 lg:p-8">
+        <h1 class="text-center text-6xl">Daily Time Record</h1>
+        <div class="flex flex-wrap justify-center md:justify-between">
+            <section class="w-full md:w-full xl:w-1/2 p-4 md:p-6">
+                <div id="clock" class="clock text-7xl md:text-9xl xl:text-8xl flex flex-wrap justify-center max-w-2xl mx-auto bg-gray-800 rounded-lg shadow-lg p-4 pb-7 text-white">
+                    <div class="hour max-w-20 md:max-w-32 xl:max-w-28 inline w-full"></div>
+                    <span>:</span>
+                    <div class="minute max-w-20 md:max-w-32 xl:max-w-28 inline w-full"></div>
+                    <span>:</span>
+                    <div class="second max-w-20 md:max-w-32 xl:max-w-28 inline w-full"></div>
+                    <div class="period max-w-20 md:max-w-32 xl:max-w-28 inline w-full"></div>
+                    <div id="date" class="text-center text-3xl md:text-5xl xl:text-4xl"></div>
+                </div>
+                <div class="controls flex justify-center space-x-4">
+                    <button id="clockInBtn" class="clock-in-btn w-32 bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded" :class="{ 'opacity-50 cursor-not-allowed': isClockInDisabled }">Clock In</button>
+                    <button id="clockOutBtn" class="clock-out-btn w-32 bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded" :class="{ 'opacity-50 cursor-not-allowed': isClockOutDisabled }">Clock Out</button>
+                </div>
+                <div class="actions">
+                    <button id="exportBtn" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" title="Export Timesheet">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m.75 12 3 3m0 0 3-3m-3 3v-6m-1.5-9H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
+                          </svg>                          
+                    </button>
+                    <button id="infoBtn" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded" title="Information and Additional Settings">
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M11.42 15.17 17.25 21A2.652 2.652 0 0 0 21 17.25l-5.877-5.877M11.42 15.17l2.496-3.03c.317-.384.74-.626 1.208-.766M11.42 15.17l-4.655 5.653a2.548 2.548 0 1 1-3.586-3.586l6.837-5.63m5.108-.233c.55-.164 1.163-.188 1.743-.14a4.5 4.5 0 0 0 4.486-6.336l-3.276 3.277a3.004 3.004 0 0 1-2.25-2.25l3.276-3.276a4.5 4.5 0 0 0-6.336 4.486c.091 1.076-.071 2.264-.904 2.95l-.102.085m-1.745 1.437L5.909 7.5H4.5L2.25 3.75l1.5-1.5L7.5 4.5v1.409l4.26 4.26m-1.745 1.437 1.745-1.437m6.615 8.206L15.75 15.75M4.867 19.125h.008v.008h-.008v-.008Z" />
+                      </svg>                                                                        
+                    </button>
+                </div>
+            </section>
+            <section class="w-full md:w-full xl:w-1/2 p-4 md:p-6">
+                
+                <div class="flex items-center justify-between">
+                  <h2 class="font-bold text-lg">Time Records</h2>
+                  <div class="mini-box relative text-right w-3/4">
+                    <button id="filterBtn" class="bg-violet-500 hover:bg-violet-700 text-white font-bold py-2 px-4 rounded" title="Filter Table Date">
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 0 1-.659 1.591l-5.432 5.432a2.25 2.25 0 0 0-.659 1.591v2.927a2.25 2.25 0 0 1-1.244 2.013L9.75 21v-6.568a2.25 2.25 0 0 0-.659-1.591L3.659 7.409A2.25 2.25 0 0 1 3 5.818V4.774c0-.54.384-1.006.917-1.096A48.32 48.32 0 0 1 12 3Z" />
+                      </svg>                      
+                    </button>
+                    <div id="filter-modal" class="absolute top-0 left-0 w-full bg-white shadow-md py-2 px-4 rounded hidden group-hover:block text-left">
+                      <div class="flex flex-wrap -mx-4">
+                        <div class="flex w-full items-center justify-between">
+                          <h3 class="font-bold pl-2 text-sm">Time Periods</h3>
+                          <button class="close-modal text-gray-400 hover:text-gray-900 transition duration-300 mr-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+                              </svg>                  
+                        </button>
+                        </div>
+                        <div class="flex justify-center p-2 w-full">
+                          <button name="timePeriod" data-type="filter" class="text-xs shadow-sm bg-gray-200 hover:bg-gray-300 py-2 px-4 rounded-l-md border-x border-gray-300" value="previous month">previous month</button>
+                          <button name="timePeriod" data-type="filter" class="text-xs shadow-sm bg-gray-200 hover:bg-gray-300 py-2 px-4 border-x border-gray-300" value="previous year">previous year</button>
+                          <button name="timePeriod" data-type="filter" class="text-xs shadow-sm bg-gray-200 hover:bg-gray-300 py-2 px-4 border-x border-gray-300" value="this month">this month</button>
+                          <button name="timePeriod" data-type="filter" class="text-xs shadow-sm bg-gray-200 hover:bg-gray-300 py-2 px-4 rounded-r-md border-x border-gray-300" value="this year">this year</button>
+                        </div>
+                      </div>
+                      <hr class="mt-2">
+                      <div class="-mx-4 flex flex-wrap items-center justify-center mt-3">
+                        <div class="w-full">
+                          <h3 class="font-bold p-2 pb-0 pt-0 text-sm">Date Range</h3>
+                        </div>
+                        <div class="w-full md:w-2/5 xl:w-2/5 p-2">
+                          <label for="startDate" class="block text-xs font-medium text-gray-700">Start Date:</label>
+                          <input type="date" id="startDate" name="startDate" data-type="filter" class="mt-1 text-xs block w-full py-2 pl-4 text-sm text-gray-700 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" pattern="\d{2}/\d{2}/\d{4}" placeholder="mm/dd/yyyy">
+                        </div>
+                        <div class="w-full md:w-2/5 xl:w-2/5 p-2">
+                          <label for="endDate" class="block text-xs font-medium text-gray-700">End Date:</label>
+                          <input type="date" id="endDate" name="endDate" data-type="filter" class="mt-1 text-xs block w-full py-2 pl-4 text-sm text-gray-700 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" min="01-01-1900" max="12-31-2100">
+                        </div>
+                        <button id="filterByDateRange" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded" data-type="filter" name="byDateRange">
+                          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="m15.75 15.75-2.489-2.489m0 0a3.375 3.375 0 1 0-4.773-4.773 3.375 3.375 0 0 0 4.774 4.774ZM21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                          </svg>                          
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <table id="records">
+                    <thead>
+                        <tr>
+                            <th>Actions</th>
+                            <th>Date</th>
+                            <th>Notes</th>
+                            <th>Time In</th>
+                            <th>Time Out</th>
+                            <th>Duration</th>
+                        </tr>
+                    </thead>
+                    <tbody id="recordTableBody">
+                    </tbody>
+                    <tfoot id="recordTableFooter">
+                        <tr>
+                            <td colspan="5">Total Hours</td>
+                            <td id="totalHours"></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </section>
+        </div>
+    </main>
+    
+    <div id="info-modal" class="modal overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center h-modal md:h-full md:inset-0 hidden">
+        <!-- Modal background -->
+        <div class="modal-background absolute w-full h-full bg-gray-900 opacity-50"></div>
+      
+        <!-- Modal content -->
+        <div class="modal-content relative mx-auto p-1 w-full max-w-2xl h-full md:h-auto bg-white mt-10 rounded">
+          <!-- Modal header -->
+          <div class="modal-header flex justify-between p-2 border-b border-gray-200">
+            <h5 class="text-lg font-bold">Time Sheet Settings</h5>
+            <button class="close-modal text-gray-400 hover:text-gray-900 transition duration-300">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+                  </svg>                  
+            </button>
+          </div>
+      
+          <!-- Modal body -->
+            <form id="additionalInfoForm" class=" modal-body mx-auto p-4">
+                <div class="flex flex-wrap -mx-4">
+                  <div class="w-full">
+                    <h3 class="font-bold p-2 pb-0">User Information</h3>
+                  </div>
+                  <div class="w-full md:w-1/2 xl:w-1/3 p-2">
+                    <label for="userName" class="block text-sm font-medium text-gray-700">Name:</label>
+                    <input type="text" id="userName" name="userName" required class="mt-1 block w-full py-2 pl-10 text-sm text-gray-700 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                  </div>
+                  <div class="w-full md:w-1/2 xl:w-1/3 p-2">
+                    <label for="role" class="block text-sm font-medium text-gray-700">Role:</label>
+                    <input type="text" id="role" name="role" required class="mt-1 block w-full py-2 pl-10 text-sm text-gray-700 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                  </div>
+                  <div class="w-full md:w-1/2 xl:w-1/3 p-2">
+                    <label for="email" class="block text-sm font-medium text-gray-700">Email:</label>
+                    <input type="text" id="email" name="email" required class="mt-1 block w-full py-2 pl-10 text-sm text-gray-700 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                  </div>
+                  <div class="w-full md:w-1/2 xl:w-1/3 p-2">
+                    <label for="dateRange" class="block text-sm font-medium text-gray-700">Date Range:</label>
+                    <input type="text" id="dateRange" name="dateRange" required class="mt-1 block w-full py-2 pl-10 text-sm text-gray-700 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                  </div>
+                  <div class="w-full md:w-1/2 xl:w-1/3 p-2">
+                    <label for="monthToInvoice" class="block text-sm font-medium text-gray-700">Month:</label>
+                    <input type="text" id="monthToInvoice" name="monthToInvoice" required class="mt-1 block w-full py-2 pl-10 text-sm text-gray-700 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                  </div>
+                  <div class="w-full md:w-1/2 xl:w-1/3 p-2">
+                    <label for="accountNumber" class="block text-sm font-medium text-gray-700">Bank Account Number:</label>
+                    <input type="text" id="accountNumber" name="accountNumber" required class="mt-1 block w-full py-2 pl-10 text-sm text-gray-700 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                  </div>
+                </div>
+                <hr class="mt-6">
+                <div class="flex flex-wrap -mx-4 mt-5">
+                  <div class="w-full">
+                    <h3 class="font-bold p-2 pb-0 pt-0">Client Information</h3>
+                  </div>
+                  <div class="w-full md:w-1/2 xl:w-1/3 p-2">
+                    <label for="clientName" class="block text-sm font-medium text-gray-700">Client Name:</label>
+                    <input type="text" id="clientName" name="clientName" required class="mt-1 block w-full py-2 pl-10 text-sm text-gray-700 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                  </div>
+                  <div class="w-full md:w-1/2 xl:w-1/3 p-2">
+                    <label for="clientRole" class="block text-sm font-medium text-gray-700">Client Role:</label>
+                    <input type="text" id="clientRole" name="clientRole" required class="mt-1 block w-full py-2 pl-10 text-sm text-gray-700 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                  </div>
+                  <div class="w-full md:w-1/2 xl:w-1/3 p-2">
+                    <label for="clientEmail" class="block text-sm font-medium text-gray-700">Client Email:</label>
+                    <input type="text" id="clientEmail" name="clientEmail" required class="mt-1 block w-full py-2 pl-10 text-sm text-gray-700 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                  </div>
+                  <div class="w-full md:w-1/2 xl:w-1/3 p-2">
+                    <label for="invoiceDate" class="block text-sm font-medium text-gray-700">Invoice Date:</label>
+                    <input type="text" id="invoiceDate" name="invoiceDate" required class="mt-1 block w-full py-2 pl-10 text-sm text-gray-700 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                  </div>
+                  <div class="w-full md:w-1/2 xl:w-1/3 p-2">
+                    <label for="invoiceNum" class="block text-sm font-medium text-gray-700">Invoice Number:</label>
+                    <input type="text" id="invoiceNum" name="invoiceNum" required class="mt-1 block w-full py-2 pl-10 text-sm text-gray-700 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                  </div>
+                </div>
+                <hr class="mt-6">
+                <div class="flex flex-wrap -mx-4 mt-5">
+                  <div class="w-full">
+                    <h3 class="font-bold p-2 pb-0 pt-0">Additional Settings</h3>
+                  </div>
+                  <div class="w-full md:w-2/4 xl:w-2/4 p-2">
+                    <label for="dateFormat" class="block text-sm font-medium text-gray-700 ">Date Format:</label>
+                    <select id="dateFormat" name="dateFormat" required class="mt-1 block py-2 pl-4 text-sm text-gray-700 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 w-2/3">
+                      <option value="en-US">US - (DD/MM/YYYY)</option>
+                      <option value="en-NZ">NZ - (MM/DD/YYYY)</option>
+                    </select>
+                  </div>
+                  <div class="w-full md:w-2/4 xl:w-2/4 p-2">
+                    <label for="fontSize" class="block text-sm font-medium text-gray-700 ">Font Size (Export to PDF):</label>
+                    <div class="flex items-center">
+                      <input type="range" id="fontSize" min="1" max="36" value="16" class="w-2/3 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                      <span id="fontSizeOutput" class="ml-2 text-sm text-gray-600">16px</span>
+                    </div>
+                  </div>
+                </div>
+            </form>
+      
+          <!-- Modal footer -->
+          <div class="modal-footer p-2 border-t border-gray-200">
+            <button id="saveDetails" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 3.75H6.912a2.25 2.25 0 0 0-2.15 1.588L2.35 13.177a2.25 2.25 0 0 0-.1.661V18a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18v-4.162c0-.224-.034-.447-.1-.661L19.24 5.338a2.25 2.25 0 0 0-2.15-1.588H15M2.25 13.5h3.86a2.25 2.25 0 0 1 2.012 1.244l.256.512a2.25 2.25 0 0 0 2.013 1.244h3.218a2.25 2.25 0 0 0 2.013-1.244l.256-.512a2.25 2.25 0 0 1 2.013-1.244h3.859M12 3v8.25m0 0-3-3m3 3 3-3" /></svg>            
+            </button>
+          </div>
+        </div>
+    </div>
+    <div id="export-modal" class="modal overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center h-modal md:h-full md:inset-0 hidden">
+      <!-- Modal background -->
+      <div class="modal-background absolute w-full h-full bg-gray-900 opacity-50"></div>
+    
+      <!-- Modal content -->
+      <div class="modal-content relative mx-auto p-1 w-full max-w-2xl h-full md:h-auto bg-white mt-10 rounded">
+        <!-- Modal header -->
+        <div class="modal-header flex justify-between p-2 border-b border-gray-200">
+          <h5 class="text-lg font-bold">Want to export timesheet?</h5>
+          <button class="close-modal text-gray-400 hover:text-gray-900 transition duration-300">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+                </svg>                  
+          </button>
+        </div>
+    
+        <!-- Modal body -->
+          <form id="additionalInfoForm" class=" modal-body mx-auto p-4">
+              <div class="flex flex-wrap -mx-4">
+                <div class="w-full">
+                  <h3 class="font-bold p-2 pb-0">Time Periods</h3>
+                </div>
+                <div class="flex justify-center p-2 w-full">
+                  <button name="timePeriod" data-type="export" class="text-sm shadow-sm bg-gray-200 hover:bg-gray-300 py-2 px-4 rounded-l-md border-x border-gray-300" value="previous month">previous month</button>
+                  <button name="timePeriod" data-type="export" class="text-sm shadow-sm bg-gray-200 hover:bg-gray-300 py-2 px-4 border-x border-gray-300" value="previous year">previous year</button>
+                  <button name="timePeriod" data-type="export" class="text-sm shadow-sm bg-gray-200 hover:bg-gray-300 py-2 px-4 border-x border-gray-300" value="this month">this month</button>
+                  <button name="timePeriod" data-type="export" class="text-sm shadow-sm bg-gray-200 hover:bg-gray-300 py-2 px-4 rounded-r-md border-x border-gray-300" value="this year">this year</button>
+                </div>
+              </div>
+              <hr class="mt-6">
+              <div class="flex flex-wrap -mx-4 mt-5">
+                <div class="w-full">
+                  <h3 class="font-bold p-2 pb-0 pt-0">Date Range</h3>
+                </div>
+                <div class="w-full md:w-1/2 xl:w-1/2 p-2">
+                  <label for="startDate" class="block text-sm font-medium text-gray-700">Start Date:</label>
+                  <input type="date" id="startDate" name="startDate" data-type="export" class="mt-1 block w-full py-2 pl-4 text-sm text-gray-700 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" pattern="\d{2}/\d{2}/\d{4}" placeholder="mm/dd/yyyy">
+                </div>
+                <div class="w-full md:w-1/2 xl:w-1/2 p-2">
+                  <label for="endDate" class="block text-sm font-medium text-gray-700">End Date:</label>
+                  <input type="date" id="endDate" name="endDate" data-type="export" class="mt-1 block w-full py-2 pl-4 text-sm text-gray-700 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" pattern="\d{2}/\d{2}/\d{4}" placeholder="mm/dd/yyyy">
+                </div>
+              </div>
+          </form>
+    
+        <!-- Modal footer -->
+        <div class="modal-footer p-2 border-t border-gray-200">
+          <button id="exportByDateRange" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded" data-type="export" name="byDateRange">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m.75 12 3 3m0 0 3-3m-3 3v-6m-1.5-9H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" /></svg>            
+          </button>
+        </div>
+      </div>
+    </div>
+    <!-- <script type="module">
+        import './app.js';
+    </script> -->
+    <script src="script.js"></script>
+</body>
+</html>
