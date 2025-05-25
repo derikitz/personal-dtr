@@ -77,7 +77,7 @@ document.addEventListener('DOMContentLoaded', () => {
     request.onupgradeneeded = (e) => {
         db = e.target.result;
         db.createObjectStore('timeRecords', { keyPath: 'id', autoIncrement: true });
-        db.createObjectStore('settings', { keypath: 'key' });
+        db.createObjectStore('settings', { keyPath: 'key' });
     }
 
     request.onsuccess = (e) => {
